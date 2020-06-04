@@ -3,50 +3,98 @@
   <head>
     <meta charset=UTF-8 />
     <link rel="stylesheet" type="text/css" href="styles.css" />
+    <style>
+img {
+  position: absolute;
+  left: 600px;
+  top: 100px;
+  z-index: 1;
+}
+</style>
   </head>
   <body>
+
     <script src="three.min.js"></script>
     <script src="OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
     <script>
-      let scene, camera, renderer;
+      let scene, camera, renderer, sphereCamera;
+
+      let PARAMS = {
+        texture: 'AFFICHE2',
+        textures: ['AFFICHE2', 'AFFICHE1', 'textelogo'],
+      }
+
+      let TEXTURES = {
+        'AFFICHE2': 'AFFICHE2.png', //pour preloader three textures, remplacera donc les chemin d'acces avec des textures three.js
+        'AFFICHE1': 'AFFICHE1.png',
+        'textelogo': 'textelogo.png',
+      }
+
+
       function init() {
+
+
+        //preload textures
+        for (let name in TEXTURES) {
+          let path = TEXTURES[name];
+          TEXTURES[name] = new THREE.TextureLoader().load( path );
+        }
+
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,1,5000);
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight,1,5000);
         camera.position.set(0,400,1000);
 
         renderer = new THREE.WebGLRenderer({antialias:true});
-        renderer.setSize(window.innerWidth,window.innerHeight);
+        renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
-        
+
         let controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableZoom = false;
-        
-        let urls = [
-          'posx.jpg', 'negx.jpg',
-          'posy.jpg', 'negy.jpg',
-          'posz.jpg', 'negz.jpg',
-        ];
-        let loader = new THREE.CubeTextureLoader(); 
-        scene.background = loader.load(urls);
-       
-        sphereCamera = new THREE.CubeCamera(1, 1000, 500);
-        sphereCamera.position.set(0, 100, 0);
-        scene.add(sphereCamera);
-        let sphereMaterial = new THREE.MeshBasicMaterial( {envMap: sphereCamera.renderTarget} );
-        let sphereGeo =  new THREE.SphereGeometry(400, 50, 50);
 
-        let mirrorSphere = new THREE.Mesh(sphereGeo, sphereMaterial);
-        mirrorSphere.position.set(0, 100, 0);
-        scene.add(mirrorSphere);
+        let urls = [
+          'right.jpg', 'left.jpg',
+          'up.jpg', 'down.jpg',
+          'middle.jpg', 'right2.jpg'
+        ];
+        let loader = new THREE.CubeTextureLoader();
+        scene.background = loader.load(urls);
+
+        sphereCamera = new THREE.CubeCamera(1,1000,500);
+        sphereCamera.position.set(0,100,0);
+        scene.add(sphereCamera);
+
+        // let texture = 
+
+        let sphereMaterial = new THREE.MeshBasicMaterial({
+          envMap: sphereCamera.renderTarget,
+          //map: TEXTURES[PARAMS.texture],
+
+        });
+
+        let sphereGeo = new THREE.SphereGeometry(250,50,50);
+        let sphere = new THREE.Mesh(sphereGeo,sphereMaterial);
+        sphere.position.set(0,100,0);
+        scene.add(sphere);
+
+
+        let gui = new dat.GUI();
+        gui.add(PARAMS, 'texture', PARAMS.textures).onChange(function(value) {
+          sphereMaterial.tex = TEXTURES[value];
+        });
 
         render();
       }
       function render() {
+        console.log(PARAMS.texture);
         renderer.render(scene,camera);
-        sphereCamera.updateCubeMap( renderer, scene );
+        sphereCamera.update(renderer,scene);
         requestAnimationFrame(render);
       }
       init();
     </script>
+
+    <img id="affiche" src="AFFICHE3.png" alt="affiche" width="595" height="842" draggable="false">
+
   </body>
 </html>
